@@ -1,0 +1,30 @@
+<div class="container">
+  <h2 class="title">
+    🖊️ ثبت امضای دیجیتال
+  </h2>
+
+  <div class="signature-paper">
+    <canvas
+      #canvas
+      class="signature-canvas"
+      (mousedown)="startDrawing($event)"
+      (mousemove)="draw($event)"
+      (mouseup)="stopDrawing()"
+      (mouseleave)="stopDrawing()"
+      (touchstart)="startDrawing($event)"
+      (touchmove)="draw($event)"
+      (touchend)="stopDrawing()"
+    ></canvas>
+  </div>
+
+  <p class="hint">لطفاً امضای خود را با دقت وارد کنید.</p>
+
+  <div class="actions">
+    <button class="btn primary" (click)="saveSignature()">
+      💾 ذخیره امضا
+    </button>
+    <button class="btn danger" (click)="clearCanvas()">
+      ❌ پاک کردن
+    </button>
+  </div>
+</div>

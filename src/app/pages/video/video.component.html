@@ -1,0 +1,62 @@
+<div class="p-4 mx-auto max-w-sm">
+  <div class="shadow-lg rounded-lg bg-white overflow-hidden">
+    <div class="p-4">
+      <h1 class="text-xl font-bold text-gray-800 text-center mb-4">تشخیص چهره در ویدئو</h1>
+
+      <div class="relative w-full" style="padding-top: 75%;">
+        <video
+          #videoEl
+          [attr.src]="recordedVideoURL || null"
+          [attr.autoplay]="!recordedVideoURL ? true : null"
+          [muted]="recording ? true : null"
+          playsinline
+          (click)="recordedVideoURL ? handlePlaybackClick() : null"
+          (timeupdate)="onTimeUpdate()"
+          class="absolute top-0 left-0 w-full h-full object-cover rounded-lg border-2 border-gray-300 cursor-pointer"
+        ></video>
+
+        <!-- overlay loader -->
+        <div *ngIf="!modelsLoaded" class="absolute inset-0 flex flex-col justify-center items-center bg-black bg-opacity-50 text-white">
+          <svg class="animate-spin h-8 w-8 mb-2" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+          <div class="mt-2">در حال لود مدل‌های هوش مصنوعی...</div>
+        </div>
+
+        <!-- progress bar when recorded video exists -->
+        <div
+          *ngIf="recordedVideoURL"
+          class="absolute left-2 right-2 bottom-2 h-1 rounded cursor-pointer"
+          style="background-color: rgba(255,255,255,0.4);"
+          (click)="onProgressBarClick($event)"
+        >
+          <div class="h-full rounded" [style.width.%]="progress * 100" style="background-color: #10B981; transition: width 0.1s linear;"></div>
+        </div>
+      </div>
+
+      <div class="mt-4">
+        <div *ngIf="message" class="mb-4">
+          <div
+            [ngClass]="message.includes('❌') ? 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3' : 'bg-green-100 border-l-4 border-green-500 text-green-700 p-3'">
+            {{ message }}
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <button
+            class="w-full py-2 px-4 rounded-lg text-white font-semibold focus:outline-none"
+            [class.bg-green-500]="!recording"
+            [class.bg-green-600]="!recording"
+            [class.bg-red-600]="recording"
+            [disabled]="!modelsLoaded"
+            (click)="toggleRecording()"
+          >
+            <span *ngIf="!recording">شروع ضبط</span>
+            <span *ngIf="recording">توقف ضبط</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
