@@ -1,8 +1,27 @@
 <div class="p-4 mx-auto max-w-sm">
-  <div class="shadow-lg rounded-lg bg-white overflow-hidden">
-    <div class="p-4">
-      <h1 class="text-xl font-bold text-gray-800 text-center mb-4">تشخیص چهره در ویدئو</h1>
 
+  @if (errorMessage()){
+  <div class="mb-6 bg-red-100 border border-red-300 rounded-xl p-4">
+    <div class="flex items-start gap-3">
+      <div class="bg-red-500 rounded-full p-1 mt-0.5 text-white">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield h-3 w-3 text-destructive-foreground">
+          <path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path>
+        </svg>
+      </div>
+      <div>
+        <h3 class="font-medium text-red-500 mb-1">Verification Error</h3>
+        <p class="text-sm font-thin text-red-300">Camera access denied. Please allow camera permissions to continue.</p>
+      </div>
+    </div>
+  </div>
+  }
+  <div class="shadow-lg rounded-lg bg-white overflow-hidden">
+    <div class="p-4 flex flex-col gap-6">
+      <h1 class="text-xl font-bold text-gray-800 text-center mb-4">تشخیص چهره در ویدئو</h1>
+      <div class="bg-gray-100 rounded-xl p-4 border-l-4 border-blue-500">
+        <h3 class="font-medium text-foreground mb-2">Please read aloud:</h3>
+        <p class="text-sm text-foreground leading-relaxed italic">"I confirm that I am the person shown in this video and that all information provided is accurate and true."</p>
+      </div>
       <div class="relative w-full" style="padding-top: 75%;">
         <video
           #videoEl
@@ -12,8 +31,17 @@
           playsinline
           (click)="recordedVideoURL ? handlePlaybackClick() : null"
           (timeupdate)="onTimeUpdate()"
-          class="absolute top-0 left-0 w-full h-full object-cover rounded-lg border-2 border-gray-300 cursor-pointer"
+          class="absolute top-0 left-0 w-full h-full object-cover border-2 border-slate-300 rounded-lg border-dashed overflow-hidden bg-white cursor-pointer"
         ></video>
+        @if (!recordedVideoURL && !isRecordingStarted() && modelsLoaded){
+          <div class="absolute top-0 w-full h-full flex flex-col items-center justify-center text-gray-400 z-10">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-video h-12 w-12 text-muted-foreground mx-auto mb-3">
+              <path d="m16 13 5.223 3.482a.5.5 0 0 0 .777-.416V7.87a.5.5 0 0 0-.752-.432L16 10.5"></path>
+              <rect x="2" y="6" width="14" height="12" rx="2"></rect>
+            </svg>
+            <span class="text-sm text-gray-400 inline-block">محل قرار گیری ویدئو</span>
+          </div>
+        }
 
         <!-- overlay loader -->
         <div *ngIf="!modelsLoaded" class="absolute inset-0 flex flex-col justify-center items-center bg-black bg-opacity-50 text-white">
@@ -36,25 +64,22 @@
       </div>
 
       <div class="mt-4">
-        <div *ngIf="message" class="mb-4">
-          <div
-            [ngClass]="message.includes('❌') ? 'bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3' : 'bg-green-100 border-l-4 border-green-500 text-green-700 p-3'">
-            {{ message }}
+        <div *ngIf="errorMessage()" class="mb-4">
+          <div>
+            {{ errorMessage() }}
           </div>
         </div>
 
         <div class="flex justify-center">
-          <button
-            class="w-full py-2 px-4 rounded-lg text-white font-semibold focus:outline-none"
-            [class.bg-green-500]="!recording"
-            [class.bg-green-600]="!recording"
+          <app-button
+            class="w-full rounded-lg text-white font-semibold focus:outline-none"
             [class.bg-red-600]="recording"
             [disabled]="!modelsLoaded"
             (click)="toggleRecording()"
           >
             <span *ngIf="!recording">شروع ضبط</span>
             <span *ngIf="recording">توقف ضبط</span>
-          </button>
+          </app-button>
         </div>
       </div>
     </div>

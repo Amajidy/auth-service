@@ -1,9 +1,10 @@
-import {AfterViewInit, Component, ElementRef, ViewChild} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, signal, ViewChild} from '@angular/core';
+import {ButtonComponent} from "../../../components/button/button.component";
 
 @Component({
   selector: 'app-sign',
   standalone: true,
-  imports: [],
+  imports: [ButtonComponent],
   templateUrl: './sign.component.html',
   styleUrl: './sign.component.scss'
 })
@@ -13,22 +14,22 @@ export class SignComponent implements AfterViewInit {
   private ctx!: CanvasRenderingContext2D;
   private isDrawing = false;
 
+  isSignDrawn = signal(false)
+
   ngAfterViewInit() {
     const canvas = this.canvasRef.nativeElement;
     const scale = window.devicePixelRatio || 1;
-
-    canvas.width = canvas.offsetWidth * scale;
-    canvas.height = canvas.offsetHeight * scale;
 
     this.ctx = canvas.getContext('2d')!;
     this.ctx.scale(scale, scale);
 
     this.ctx.lineCap = 'round';
     this.ctx.strokeStyle = '#000';
-    this.ctx.lineWidth = 3;
+    this.ctx.lineWidth = 2;
   }
 
   startDrawing(event: MouseEvent | TouchEvent) {
+    this.isSignDrawn.set(true);
     event.preventDefault();
     const { x, y } = this.getCoordinates(event);
     this.ctx.beginPath();
@@ -55,6 +56,7 @@ export class SignComponent implements AfterViewInit {
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.clearRect(0, 0, canvas.width, canvas.height);
     this.ctx.scale(scale, scale);
+    this.isSignDrawn.set(false)
   }
 
   saveSignature() {

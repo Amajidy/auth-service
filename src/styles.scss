@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+  font-family: 'vazir';
+  src: url('../public/fonts/Vazirmatn-Medium.woff2') format('woff2');
+}
+
+body{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'vazir';
+  background: #f4f4f2;
+  direction: rtl;
+}

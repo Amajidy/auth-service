@@ -4,17 +4,18 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
-  ChangeDetectorRef
+  ChangeDetectorRef, signal
 } from '@angular/core';
 import * as faceapi from 'face-api.js';
-import {NgClass, NgIf} from "@angular/common";
+import {NgIf} from "@angular/common";
+import {ButtonComponent} from "../../../components/button/button.component";
 
 @Component({
   selector: 'app-video',
   standalone: true,
   imports: [
     NgIf,
-    NgClass
+    ButtonComponent,
   ],
   templateUrl: './video.component.html',
   styleUrl: './video.component.scss'
@@ -26,6 +27,8 @@ export class VideoComponent implements OnInit, OnDestroy {
   message = '';
   recordedVideoURL: string | null = null;
   isPlaying = false;
+  errorMessage = signal('');
+  isRecordingStarted = signal(false)
   progress = 0; // 0..1
 
   private mediaRecorder: MediaRecorder | null = null;
@@ -66,6 +69,7 @@ export class VideoComponent implements OnInit, OnDestroy {
       this.cd.markForCheck();
     } catch (err) {
       console.error('خطا در لود مدل‌ها:', err);
+      this.errorMessage.set('❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.')
       this.message = '❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.';
     }
   }
@@ -89,6 +93,7 @@ export class VideoComponent implements OnInit, OnDestroy {
       return stream;
     } catch (err) {
       console.error('خطا در دسترسی به دوربین و میکروفن:', err);
+      this.errorMessage.set('دسترسی به دوربین و میکروفن رد شد.')
       this.message = '❌ دسترسی به دوربین و میکروفن رد شد.';
       return null;
     }
@@ -138,6 +143,7 @@ export class VideoComponent implements OnInit, OnDestroy {
         box.y + box.height > videoHeight - 20;
 
       if (isFaceTooSmall || isFaceOutOfFrame) {
+        // this.errorMessage.set('لطفاً صورت را کامل و در مرکز کادر قرار دهید.')
         this.message = '❌ لطفاً صورت را کامل و در مرکز کادر قرار دهید.';
         this.cd.markForCheck();
         return;
@@ -168,6 +174,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   // ضبط و MediaRecorder
   // --------------------------
   async startRecording() {
+    this.isRecordingStarted.set(true)
     // اگر ویدئوی قبلی وجود داشت، دوباره استریم دوربین رو فعال کن
     if (this.recordedVideoURL || !this.videoRef.nativeElement.srcObject) {
       const stream = await this.startCameraStream();

@@ -1,0 +1,30 @@
+<div class="flex flex-col">
+  <div class="flex justify-around">
+  @for (item of steps; track item){
+    <div class="flex flex-col items-center gap-2">
+      <span class="flex items-center justify-center rounded-full w-10 h-10"
+      [ngClass]="{
+        'bg-green-600 text-white': ($index + 1) < step(),
+         'bg-blue-500 text-white': ($index + 1) === step(),
+        'bg-gray-300 opacity-70 text-black': ($index + 1) > step()
+        }"
+      >
+        @if ($index + 1 >= step()){
+          {{ $index + 1 }}
+        } @else {
+        ✓
+        }
+      </span>
+      <span class="text-xs">{{ item }}</span>
+    </div>
+  }
+  </div>
+  <div class="h-3 w-full rounded-lg overflow-hidden bg-gray-300 relative mt-3">
+    <div
+      class="absolute bg-blue-600 h-full rounded-r-lg"
+      [style.width]="step() * 100 / steps.length + '%'"
+    ></div>
+  </div>
+
+  <p class="text-xs text-center mt-3">Step {{ step() }} of {{ steps.length }}</p>
+</div>
