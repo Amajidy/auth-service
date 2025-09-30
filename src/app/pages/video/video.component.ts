@@ -4,7 +4,7 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
-  ChangeDetectorRef, signal
+  ChangeDetectorRef, signal, NgZone
 } from '@angular/core';
 import * as faceapi from 'face-api.js';
 import {NgIf} from "@angular/common";
@@ -24,7 +24,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   @ViewChild('videoEl', { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
   modelsLoaded = false;
   recording = false;
-  message = '';
+  message = signal('');
   recordedVideoURL: string | null = null;
   isPlaying = false;
   errorMessage = signal('');
@@ -33,9 +33,15 @@ export class VideoComponent implements OnInit, OnDestroy {
 
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
-  private detectionIntervalId: any = null;
+  // private detectionIntervalId: any = null; // حذف شد
+  private animationFrameId: number | null = null; // برای تشخیص چهره در حالت Live View
 
-  constructor(private cd: ChangeDetectorRef) {}
+  // فرکانس تشخیص چهره هنگام ضبط: 1000ms (1 فریم در ثانیه)
+  private readonly DETECTION_INTERVAL_MS = 1000;
+  private lastDetectionTime = 0;
+
+  // برای تزریق NgZone جهت اجرای faceapi خارج از Angular Change Detection
+  constructor(private cd: ChangeDetectorRef, private ngZone: NgZone) {}
 
   async ngOnInit() {
     await this.loadModels();
@@ -45,7 +51,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy() {
-    this.stopDetectionInterval();
+    this.stopDetectionLoop();
     this.stopMediaRecorderIfActive();
     this.stopCameraTracks();
     // revoke blob URL
@@ -60,17 +66,20 @@ export class VideoComponent implements OnInit, OnDestroy {
   private async loadModels() {
     const MODEL_URL = '/models';
     try {
-      await Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
-        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
-      ]);
+      // استفاده از Zone برای اطمینان از اینکه عملیات لودینگ سنگین در خارج از ردیابی تغییرات انگولار است.
+      await this.ngZone.runOutsideAngular(async () => {
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]);
+      });
       this.modelsLoaded = true;
-      this.message = '✅ مدل‌ها با موفقیت لود شدند.';
+      this.message.set('✅ مدل‌ها با موفقیت لود شدند.');
       this.cd.markForCheck();
     } catch (err) {
       console.error('خطا در لود مدل‌ها:', err);
       this.errorMessage.set('❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.')
-      this.message = '❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.';
+      this.message.set('❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.');
     }
   }
 
@@ -87,14 +96,16 @@ export class VideoComponent implements OnInit, OnDestroy {
         this.recordedVideoURL = null;
       }
       video.srcObject = stream;
-      video.muted = this.recording; // هنگام ضبط میوت کن
+      video.muted = true; // در حالت پیش‌نمایش همیشه میوت کن
       video.play().catch(() => {});
       this.cd.markForCheck();
+      // شروع حلقه تشخیص چهره
+      this.startDetectionLoop();
       return stream;
     } catch (err) {
       console.error('خطا در دسترسی به دوربین و میکروفن:', err);
       this.errorMessage.set('دسترسی به دوربین و میکروفن رد شد.')
-      this.message = '❌ دسترسی به دوربین و میکروفن رد شد.';
+      this.message.set('❌ دسترسی به دوربین و میکروفن رد شد.');
       return null;
     }
   }
@@ -111,62 +122,105 @@ export class VideoComponent implements OnInit, OnDestroy {
   // --------------------------
   // تشخیص چهره
   // --------------------------
-  private async detectFace() {
+  /**
+   * منطق تشخیص چهره
+   */
+  private async detectFace(): Promise<void> {
     if (!this.modelsLoaded) return;
     const video = this.videoRef?.nativeElement;
     if (!video) return;
     if (video.paused || video.ended) return;
-    const displaySize = { width: video.videoWidth, height: video.videoHeight };
-    if (displaySize.width === 0 || displaySize.height === 0) return;
 
-    try {
-      const detection = await faceapi
-        .detectSingleFace(video, new faceapi.SsdMobilenetv1Options())
-        .withFaceLandmarks();
+    // تشخیص چهره باید در خارج از منطقه انگولار اجرا شود تا فریم‌ها بلاک نشوند
+    await this.ngZone.runOutsideAngular(async () => {
+      const displaySize = { width: video.videoWidth, height: video.videoHeight };
+      if (displaySize.width === 0 || displaySize.height === 0) return;
 
-      if (!detection) {
-        this.message = '❌ چهره‌ای تشخیص داده نشد. لطفاً در مرکز کادر قرار بگیرید.';
-        this.cd.markForCheck();
-        return;
+      try {
+        const detection = await faceapi
+          .detectSingleFace(video, new faceapi.SsdMobilenetv1Options())
+          .withFaceLandmarks();
+
+        // بازگشت به منطقه انگولار برای به‌روزرسانی UI
+        this.ngZone.run(() => {
+          if (!detection) {
+            this.message.set('❌ چهره‌ای تشخیص داده نشد. لطفاً در مرکز کادر قرار بگیرید.');
+            this.cd.markForCheck();
+            return;
+          }
+
+          const landmarks = detection.landmarks;
+          const box = detection.detection.box;
+          const videoWidth = video.videoWidth;
+          const videoHeight = video.videoHeight;
+
+          const isFaceTooSmall = box.width < videoWidth * 0.3 || box.height < videoHeight * 0.4;
+          const isFaceOutOfFrame =
+            box.x < 20 ||
+            box.y < 20 ||
+            box.x + box.width > videoWidth - 20 ||
+            box.y + box.height > videoHeight - 20;
+
+          if (isFaceTooSmall || isFaceOutOfFrame) {
+            this.message.set('❌ لطفاً صورت را کامل و در مرکز کادر قرار دهید.');
+            this.cd.markForCheck();
+            return;
+          }
+
+          // بررسی پوشیدگی دهان
+          const mouth = landmarks.getMouth();
+          const jaw = landmarks.getJawOutline();
+          const faceWidth = Math.abs(jaw[16].x - jaw[0].x);
+          const mouthWidth = Math.abs(mouth[6].x - mouth[0].x);
+          const mouthHeight = Math.abs(mouth[3].y - mouth[9].y);
+
+          if (mouthWidth < faceWidth * 0.2 || mouthHeight < faceWidth * 0.05) {
+            this.message.set('❌ بخشی از صورت یا دهان پوشیده شده است.');
+            this.cd.markForCheck();
+            return;
+          }
+
+          // همه چیز اوکی
+          this.message.set('✅ چهره شما کامل و واضح شناسایی شد.');
+        });
+      } catch (err) {
+        console.error('خطا در تشخیص چهره:', err);
       }
+    });
+  }
 
-      const landmarks = detection.landmarks;
-      const box = detection.detection.box;
-      const videoWidth = video.videoWidth;
-      const videoHeight = video.videoHeight;
+  // --------------------------
+  // حلقه تشخیص چهره
+  // --------------------------
+  private startDetectionLoop() {
+    this.stopDetectionLoop();
+    this.lastDetectionTime = performance.now();
+    this.detectionLoop();
+  }
 
-      const isFaceTooSmall = box.width < videoWidth * 0.3 || box.height < videoHeight * 0.4;
-      const isFaceOutOfFrame =
-        box.x < 20 ||
-        box.y < 20 ||
-        box.x + box.width > videoWidth - 20 ||
-        box.y + box.height > videoHeight - 20;
+  private detectionLoop = () => {
+    const video = this.videoRef?.nativeElement;
+    if (!video || video.paused || video.ended || this.recordedVideoURL) {
+      this.animationFrameId = null;
+      return;
+    }
 
-      if (isFaceTooSmall || isFaceOutOfFrame) {
-        // this.errorMessage.set('لطفاً صورت را کامل و در مرکز کادر قرار دهید.')
-        this.message = '❌ لطفاً صورت را کامل و در مرکز کادر قرار دهید.';
-        this.cd.markForCheck();
-        return;
-      }
+    const now = performance.now();
+    // در حالت Live View یا Recording، فرکانس تشخیص چهره را کنترل کنید.
+    const interval = this.recording ? this.DETECTION_INTERVAL_MS : 200; // 5 FPS در حالت Live
 
-      // بررسی پوشیدگی دهان
-      const mouth = landmarks.getMouth();
-      const jaw = landmarks.getJawOutline();
-      const faceWidth = Math.abs(jaw[16].x - jaw[0].x);
-      const mouthWidth = Math.abs(mouth[6].x - mouth[0].x);
-      const mouthHeight = Math.abs(mouth[3].y - mouth[9].y);
+    if (now - this.lastDetectionTime > interval) {
+      this.lastDetectionTime = now;
+      this.detectFace();
+    }
 
-      if (mouthWidth < faceWidth * 0.2 || mouthHeight < faceWidth * 0.05) {
-        this.message = '❌ بخشی از صورت یا دهان پوشیده شده است.';
-        this.cd.markForCheck();
-        return;
-      }
+    this.animationFrameId = requestAnimationFrame(this.detectionLoop);
+  }
 
-      // همه چیز اوکی
-      this.message = '✅ چهره شما کامل و واضح شناسایی شد.';
-      this.cd.markForCheck();
-    } catch (err) {
-      console.error('خطا در تشخیص چهره:', err);
+  private stopDetectionLoop() {
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
     }
   }
 
@@ -175,7 +229,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   // --------------------------
   async startRecording() {
     this.isRecordingStarted.set(true)
-    // اگر ویدئوی قبلی وجود داشت، دوباره استریم دوربین رو فعال کن
+    // اگر ویدئوی قبلی وجود داشت یا استریم فعال نبود، دوباره استریم دوربین رو فعال کن
     if (this.recordedVideoURL || !this.videoRef.nativeElement.srcObject) {
       const stream = await this.startCameraStream();
       if (!stream) return;
@@ -214,19 +268,20 @@ export class VideoComponent implements OnInit, OnDestroy {
     };
 
     this.mediaRecorder.start();
-    this.startDetectionInterval();
+    // این حلقه تشخیص چهره از startCameraStream فعال می‌شود، فقط فرکانس آن در detectionLoop تغییر می‌کند
     this.recording = true;
-    this.message = '🔴 ضبط و تشخیص فعال است.';
+    this.message.set('🔴 ضبط و تشخیص فعال است.');
     // video should be muted while recording (not playing audio back)
     this.videoRef.nativeElement.muted = true;
     this.cd.markForCheck();
+    this.startDetectionLoop(); // برای کنترل فرکانس در حالت ضبط، دوباره فراخوانی می‌شود
   }
 
   stopRecording() {
     this.stopMediaRecorderIfActive();
-    this.stopDetectionInterval();
+    this.stopDetectionLoop(); // توقف حلقه تشخیص پس از اتمام ضبط
     this.recording = false;
-    this.message = '⏹ ضبط متوقف شد.';
+    this.message.set('⏹ ضبط متوقف شد.');
     this.cd.markForCheck();
     // unmute video after stop (playback will have audio)
     try {
@@ -249,23 +304,6 @@ export class VideoComponent implements OnInit, OnDestroy {
       }
     } catch (err) {
       console.warn('خطا در توقف MediaRecorder:', err);
-    }
-  }
-
-  // --------------------------
-  // interval مدیریت
-  // --------------------------
-  private startDetectionInterval() {
-    this.stopDetectionInterval();
-    this.detectionIntervalId = setInterval(() => {
-      this.detectFace();
-    }, 500);
-  }
-
-  private stopDetectionInterval() {
-    if (this.detectionIntervalId) {
-      clearInterval(this.detectionIntervalId);
-      this.detectionIntervalId = null;
     }
   }
 

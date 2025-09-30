@@ -1,53 +1,62 @@
-  <div class="flex items-center flex-col border-2 py-6 rounded-2xl overflow-hidden bg-white">
-    <div class="flex flex-col gap-4 items-center mb-4">
-      <h2 class="text-3xl font-bold">
-        امضا دیجیتال
-      </h2>
-      <p class="">.لطفاً امضای خود را با دقت وارد کنید</p>
-    </div>
+<div class="flex items-center flex-col border-2 py-6 rounded-2xl overflow-hidden bg-white">
+  <div class="flex flex-col gap-4 items-center mb-4">
+    <h2 class="text-3xl font-bold">
+      امضا دیجیتال
+    </h2>
+    <p>.لطفاً امضای خود را با دقت وارد کنید</p>
+  </div>
 
-    <div class="w-full p-6 pb-0">
-      <div class="relative" (mousedown)="startDrawing($event)">
-        @if (!isSignDrawn()){
-          <div class="absolute top-0 w-full h-full flex flex-col items-center justify-center text-gray-400 z-10">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              class="lucide lucide-pen-tool h-8 w-8 text-muted-foreground mx-auto mb-2"
-            >
-              <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"></path>
-              <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"></path>
-              <path d="m2.3 2.3 7.286 7.286"></path>
-              <circle cx="11" cy="11" r="2"></circle>
-            </svg>
-            <span class="text-sm text-gray-400 inline-block">امضا کنید</span>
-          </div>
-        }
+  <div class="w-full p-6 pb-0">
+    <!-- کانتینر امضا: اضافه شدن h-64 برای تعریف ارتفاع CSS Canvas و جابجایی استایل‌های مرز به اینجا -->
+    <div
+      class="relative h-64 border-2 border-slate-300 rounded-lg border-dashed overflow-hidden bg-white"
+      (mousedown)="startDrawing($event)"
+      (mouseup)="stopDrawing()"
+      (mouseleave)="stopDrawing()"
+      (touchstart)="startDrawing($event)"
+      (touchmove)="draw($event)"
+      (touchend)="stopDrawing()"
+    >
+      @if (!isSignDrawn()){
+        <!-- اضافه شدن pointer-events-none برای اجازه دادن به کلیک‌ها برای رسیدن به Canvas -->
+        <div class="absolute top-0 w-full h-full flex flex-col items-center justify-center text-gray-400 z-10 pointer-events-none">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-pen-tool h-8 w-8 text-muted-foreground mx-auto mb-2"
+          >
+            <path d="M15.707 21.293a1 1 0 0 1-1.414 0l-1.586-1.586a1 1 0 0 1 0-1.414l5.586-5.586a1 1 0 0 1 1.414 0l1.586 1.586a1 1 0 0 1 0 1.414z"></path>
+            <path d="m18 13-1.375-6.874a1 1 0 0 0-.746-.776L3.235 2.028a1 1 0 0 0-1.207 1.207L5.35 15.879a1 1 0 0 0 .776.746L13 18"></path>
+            <path d="m2.3 2.3 7.286 7.286"></path>
+            <circle cx="11" cy="11" r="2"></circle>
+          </svg>
+          <span class="text-sm text-gray-400 inline-block">امضا کنید</span>
+        </div>
+      }
+      <!-- انتقال تمام eventها به کانتینر یا مدیریت صحیح آنها برای Canvas -->
+      <!-- در اینجا eventهای move و up را روی خود Canvas نگه می‌داریم تا رسم خارج از محدوده کانتینر متوقف شود. -->
       <canvas
         #canvas
-        class="border-2 border-slate-300 rounded-lg border-dashed overflow-hidden bg-white w-full z-20"
-        (mousemove)="draw($event)"
-        (mouseup)="stopDrawing()"
-        (mouseleave)="stopDrawing()"
-        (touchstart)="startDrawing($event)"
-        (touchmove)="draw($event)"
-        (touchend)="stopDrawing()"
+        class="w-full h-full z-20 bg-transparent"
+
+      (mousemove)="draw($event)"
+      (touchmove)="draw($event)"
       >
       </canvas>
 
-      </div>
-      <div class="flex gap-2 mt-4 w-full">
-        <app-button type="button" btnType="secondary" class="w-full" (click)="clearCanvas()">
-          پاک کردن
-        </app-button>
-        <app-button class="w-full" type="button" (click)="saveSignature()">ادامه</app-button>
-      </div>
+    </div>
+    <div class="flex gap-2 mt-4 w-full">
+      <app-button type="button" btnType="secondary" class="w-full" (click)="clearCanvas()">
+        پاک کردن
+      </app-button>
+      <app-button class="w-full" type="button" (click)="saveSignature()">ادامه</app-button>
     </div>
   </div>
+</div>
