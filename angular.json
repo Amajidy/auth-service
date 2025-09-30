@@ -68,7 +68,8 @@
               "buildTarget": "auth-service:build:production"
             },
             "development": {
-              "buildTarget": "auth-service:build:development"
+              "buildTarget": "auth-service:build:development",
+              "ssl": true
             }
           },
           "defaultConfiguration": "development"

@@ -30,6 +30,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   errorMessage = signal('');
   isRecordingStarted = signal(false)
   progress = 0; // 0..1
+  doesUserAccessCamera = false;
 
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
@@ -78,6 +79,7 @@ export class VideoComponent implements OnInit, OnDestroy {
       this.cd.markForCheck();
     } catch (err) {
       console.error('خطا در لود مدل‌ها:', err);
+      this.doesUserAccessCamera = false;
       this.errorMessage.set('❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.')
       this.message.set('❌ خطا در لود مدل‌ها. لطفاً صفحه را رفرش کنید.');
     }
@@ -87,27 +89,29 @@ export class VideoComponent implements OnInit, OnDestroy {
   // استریم دوربین
   // --------------------------
   private async startCameraStream(): Promise<MediaStream | null> {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-      const video = this.videoRef.nativeElement;
-      // اگر ویدیوی قبلی ضبط شده بود، پاکش کن
-      if (this.recordedVideoURL) {
-        URL.revokeObjectURL(this.recordedVideoURL);
-        this.recordedVideoURL = null;
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const video = this.videoRef.nativeElement;
+        // اگر ویدیوی قبلی ضبط شده بود، پاکش کن
+        if (this.recordedVideoURL) {
+          URL.revokeObjectURL(this.recordedVideoURL);
+          this.recordedVideoURL = null;
+        }
+        video.srcObject = stream;
+        video.muted = true; // در حالت پیش‌نمایش همیشه میوت کن
+        video.play().catch(() => {});
+        this.cd.markForCheck();
+        // شروع حلقه تشخیص چهره
+        this.startDetectionLoop();
+        return stream;
+      } catch (err) {
+        console.error('خطا در دسترسی به دوربین و میکروفن:', err);
+        this.errorMessage.set('دسترسی به دوربین و میکروفن رد شد.')
+        this.message.set('❌ دسترسی به دوربین و میکروفن رد شد.');
+
+        return null;
       }
-      video.srcObject = stream;
-      video.muted = true; // در حالت پیش‌نمایش همیشه میوت کن
-      video.play().catch(() => {});
-      this.cd.markForCheck();
-      // شروع حلقه تشخیص چهره
-      this.startDetectionLoop();
-      return stream;
-    } catch (err) {
-      console.error('خطا در دسترسی به دوربین و میکروفن:', err);
-      this.errorMessage.set('دسترسی به دوربین و میکروفن رد شد.')
-      this.message.set('❌ دسترسی به دوربین و میکروفن رد شد.');
-      return null;
-    }
   }
 
   private stopCameraTracks() {
