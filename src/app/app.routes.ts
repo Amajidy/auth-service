@@ -3,12 +3,12 @@ import {VideoComponent} from "./pages/video/video.component";
 import {SignComponent} from "./pages/sign/sign.component";
 import {MainLayoutComponent} from "./pages/main-layout/main-layout.component";
 import {ShahkarComponent} from "./pages/shahkar/shahkar.component";
+import {userResolver} from "./resolver/user.resolver";
 
 export const routes: Routes = [
-  {path: '', component: MainLayoutComponent, children: [
-      {
-        path: 'video', component: VideoComponent
-      },
+  { path: '', component: MainLayoutComponent, resolve: { user: userResolver },
+    children: [
+      { path: 'video', component: VideoComponent },
       { path: 'sign', component: SignComponent },
       { path: 'shahkar', component: ShahkarComponent },
     ]

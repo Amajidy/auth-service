@@ -1,0 +1,8 @@
+{
+  "app": "kycflow-panel",
+  "port": 4200,
+  "build": {
+    "location": "iran"
+  },
+  "disks": []
+}

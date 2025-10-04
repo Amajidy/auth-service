@@ -1,11 +1,10 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import {StepperComponent} from "../components/stepper/stepper.component";
+import {Component, inject} from '@angular/core';
+import {ActivatedRoute, RouterOutlet} from '@angular/router';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-    imports: [RouterOutlet, StepperComponent],
+    imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

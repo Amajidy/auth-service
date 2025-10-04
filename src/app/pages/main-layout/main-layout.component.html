@@ -8,6 +8,6 @@
       <h1 class="text-2xl font-bold text-foreground mb-2">احراز هویت</h1>
       <p class="opacity-50 text-sm">برای احراز هویت خود این مراحل را کامل کنید.</p>
   </div>
-  <app-stepper class="my-4 mx-1 block" [steps]="['شاهکار', 'ویدئو', 'امضا']" [step]="2" />
+  <app-stepper class="my-4 mx-1 block" [steps]="['شاهکار', 'ویدئو', 'امضا']" [step]="step()" />
   <router-outlet />
 </div>
