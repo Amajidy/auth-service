@@ -6,7 +6,8 @@ import {ShahkarComponent} from "./pages/shahkar/shahkar.component";
 import {userResolver} from "./resolver/user.resolver";
 
 export const routes: Routes = [
-  { path: '', component: MainLayoutComponent, resolve: { user: userResolver },
+  { path: '', component: MainLayoutComponent,
+    // resolve: { user: userResolver },
     children: [
       { path: 'video', component: VideoComponent },
       { path: 'sign', component: SignComponent },
