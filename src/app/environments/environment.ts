@@ -1,1 +1,1 @@
-export const baseUrl = 'http://172.20.10.2:8080/api/v1/'
+export const baseUrl = 'https://api.kycflow.ir/api/v1/'

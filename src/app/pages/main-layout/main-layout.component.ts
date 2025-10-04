@@ -21,7 +21,7 @@ export class MainLayoutComponent implements OnInit {
 
   user = computed(() => this.data()?.['user'] as UserQueryResponse);
   step = computed(() => {
-    switch (this.user().currentStep) {
+    switch (this.user()?.currentStep) {
       case Step.SHAHKAR:
         return 1;
         case Step.VIDEO:
@@ -33,10 +33,10 @@ export class MainLayoutComponent implements OnInit {
     }
   })
   ngOnInit() {
-    if (!this.user().isCompleted) {
-      if (this.user().currentStep === Step.SHAHKAR) {
+    if (!this.user()?.isCompleted) {
+      if (this.user()?.currentStep === Step.SHAHKAR) {
         this._router.navigate(['shahkar']);
-      } else if (this.user().currentStep === Step.VIDEO) {
+      } else if (this.user()?.currentStep === Step.VIDEO) {
         this._router.navigate(['video']);
       } else {
         this._router.navigate(['sign']);
