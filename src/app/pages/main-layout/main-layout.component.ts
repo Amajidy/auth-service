@@ -29,17 +29,24 @@ export class MainLayoutComponent implements OnInit {
           case Step.SIGN:
             return 3;
       default:
-        return 0;
+        return 1;
     }
   })
   ngOnInit() {
     if (!this.user()?.isCompleted) {
-      if (this.user()?.currentStep === Step.SHAHKAR) {
-        this._router.navigate(['shahkar']);
-      } else if (this.user()?.currentStep === Step.VIDEO) {
-        this._router.navigate(['video']);
-      } else {
-        this._router.navigate(['sign']);
+      switch (this.user()?.currentStep) {
+        case Step.SHAHKAR:
+          this._router.navigate(['shahkar']);
+          break;
+          case Step.VIDEO:
+            this._router.navigate(['video']);
+            break;
+        case Step.SIGN:
+          this._router.navigate(['sign']);
+          break;
+        default:
+          this._router.navigate(['shahkar']);
+          break;
       }
     } else {
       console.log('your authorization has been completed.');
