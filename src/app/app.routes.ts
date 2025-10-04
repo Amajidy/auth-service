@@ -7,7 +7,7 @@ import {userResolver} from "./resolver/user.resolver";
 
 export const routes: Routes = [
   { path: '', component: MainLayoutComponent,
-    // resolve: { user: userResolver },
+    resolve: { user: userResolver },
     children: [
       { path: 'video', component: VideoComponent },
       { path: 'sign', component: SignComponent },
