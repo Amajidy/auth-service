@@ -1,8 +1,8 @@
 {
-  "app": "kycflow-panel",
-  "port": 4200,
-  "build": {
-    "location": "iran"
+  "app":"kycflow-app",
+  "port":4100,
+  "build":{
+    "location":"iran"
   },
-  "disks": []
+  "disks":[]
 }
