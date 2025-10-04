@@ -4,6 +4,7 @@ import {SignComponent} from "./pages/sign/sign.component";
 import {MainLayoutComponent} from "./pages/main-layout/main-layout.component";
 import {ShahkarComponent} from "./pages/shahkar/shahkar.component";
 import {userResolver} from "./resolver/user.resolver";
+import {LinkCreatorComponent} from "./pages/link-creator/link-creator.component";
 
 export const routes: Routes = [
   { path: '', component: MainLayoutComponent,
@@ -14,4 +15,5 @@ export const routes: Routes = [
       { path: 'shahkar', component: ShahkarComponent },
     ]
   },
+  { path: 'link-creator', component: LinkCreatorComponent },
 ];
