@@ -1,19 +1,26 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-
-  let newHeaders: { [name: string]: string | string[] } = {
+  const newHeaders: Record<string, string> = {
     'Content-Type': 'application/json'
   };
 
-  const webtoken = JSON.parse(localStorage.getItem('user-query') ?? '');
+  try {
+    const webtoken = JSON.parse(localStorage.getItem('user-query') || '{}');
+    const token = webtoken?.token;
 
-  // if (webtoken.token) {
-    newHeaders['x-api-key'] = webtoken.token ?? '-mhuqj9cWtY42CxghXE-E9BTEfHJg3c-u1f-epIxK64';
-  // }
-  const newReq = req.clone({
-    setHeaders: newHeaders
-  });
+    // فقط اگه توکن وجود داره
+    if (token) {
+      newHeaders['x-api-key'] = token;
+    } else {
+      // توکن پیش‌فرض فقط در حالت نبود توکن واقعی
+      newHeaders['x-api-key'] = '-mhuqj9cWtY42CxghXE-E9BTEfHJg3c-u1f-epIxK64';
+    }
+  } catch (e) {
+    console.warn('Invalid localStorage user-query', e);
+    newHeaders['x-api-key'] = '-mhuqj9cWtY42CxghXE-E9BTEfHJg3c-u1f-epIxK64';
+  }
 
+  const newReq = req.clone({ setHeaders: newHeaders });
   return next(newReq);
 };
