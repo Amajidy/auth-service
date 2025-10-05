@@ -1,15 +1,15 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  // const authService = inject(AuthService);
-  // const authToken = authService.token;
 
   let newHeaders: { [name: string]: string | string[] } = {
     'Content-Type': 'application/json'
   };
 
-  // if (authToken !== undefined) {
-  //   newHeaders['Authorization'] = `Bearer ${authToken}`;
+  const webtoken = JSON.parse(localStorage.getItem('user-query') ?? '');
+
+  // if (webtoken.token) {
+    newHeaders['x-api-key'] = webtoken.token ?? '-mhuqj9cWtY42CxghXE-E9BTEfHJg3c-u1f-epIxK64';
   // }
   const newReq = req.clone({
     setHeaders: newHeaders

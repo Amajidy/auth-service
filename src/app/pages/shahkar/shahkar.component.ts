@@ -16,10 +16,10 @@ import {VerificationService} from "../../services/verification.service";
   styleUrl: './shahkar.component.scss'
 })
 export class ShahkarComponent implements OnInit {
-    private _verificationService = inject(VerificationService)
+    private _verificationService = inject(VerificationService);
     shahkar = new FormGroup({
-        nationalNumber: new FormControl(''),
-        phoneNumber: new FormControl(''),
+        nationalCode: new FormControl(this._verificationService.getState()?.nationalCode ?? ''),
+      mobileNumber: new FormControl(this._verificationService.getState()?.mobileNumber ?? ''),
     });
 
     ngOnInit(): void {
@@ -28,7 +28,11 @@ export class ShahkarComponent implements OnInit {
 
 
     submit(){
-      this._verificationService
+      const shahkarTemp = {
+        ...this.shahkar.value,
+        trackingCode: this._verificationService.getState()?.trackingCode,
+      }
+      this._verificationService.shahkar(shahkarTemp)
     }
 
 }
