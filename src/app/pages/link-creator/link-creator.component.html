@@ -1,4 +1,5 @@
-<div class="container max-w-sm mx-auto mt-6">
-  <span (click)="navigate()">شبیه ساز</span>
+<div class="container max-w-sm mx-auto mt-6 bg-white shadow-lg p-6 flex flex-col gap-4">
 <!--  <a [routerLink]="link()">شبیه ساز</a>-->
+  <app-input [formControl]="apiKey">api key</app-input>
+  <app-button class="w-full" (click)="navigate()">شبیه ساز</app-button>
 </div>

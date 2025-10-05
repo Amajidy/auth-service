@@ -6,12 +6,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   };
 
   try {
-    const webtoken = JSON.parse(localStorage.getItem('user-query') || '{}');
-    const token = webtoken?.token;
-
+    const apiKey = localStorage.getItem('api-key');
+    console.log()
     // فقط اگه توکن وجود داره
-    if (token) {
-      newHeaders['x-api-key'] = token;
+    if (apiKey) {
+      newHeaders['x-api-key'] = apiKey;
     } else {
       // توکن پیش‌فرض فقط در حالت نبود توکن واقعی
       newHeaders['x-api-key'] = '-mhuqj9cWtY42CxghXE-E9BTEfHJg3c-u1f-epIxK64';

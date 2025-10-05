@@ -11,6 +11,7 @@ export const userResolver: ResolveFn<UserQueryResponse | null> = async (route, s
   const valueToSend = user?.trackingCode ? user : temp;
   if (!valueToSend) return null; // اگه هیچ دیتایی نداشتیم
 
+
   const response = await _verificationService.startAction(valueToSend);
   _verificationService.saveState(response);
 

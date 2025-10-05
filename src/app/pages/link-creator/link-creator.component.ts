@@ -1,24 +1,29 @@
 import {Component, inject, signal} from '@angular/core';
 import {InputComponent} from "../../../components/input/input.component";
 import {Router, RouterLink} from "@angular/router";
+import {FormControl, ReactiveFormsModule} from "@angular/forms";
+import {ButtonComponent} from "../../../components/button/button.component";
 
 @Component({
   selector: 'app-link-creator',
   standalone: true,
   imports: [
     InputComponent,
-    RouterLink
+    RouterLink,
+    ReactiveFormsModule,
+    ButtonComponent
   ],
   templateUrl: './link-creator.component.html',
   styleUrl: './link-creator.component.scss'
 })
 export class LinkCreatorComponent {
   private _router = inject(Router);
-  // link = signal<string>('/?trackingCode=' + this.randomString() + '&firstName=' + this.randomFirstName() + '&lastName=' + this.randomLastNameFa() + '&nationalCode=' + this.randomNationalId() + '&mobileNumber=' + this.randomPhoneNumber())
-  link = signal<string>('/?trackingCode=' + this.randomString() + '&firstName=' + this.randomFirstName())
+  apiKey = new FormControl('')
 
-  // link = signal('/')
   navigate() {
+    if (this.apiKey.value) {
+      localStorage.setItem('api-key', this.apiKey.value);
+    }
     // this._router.navigate(['', '/?trackingCode=' + this.randomString() + '&firstName=' + this.randomFirstName() + '&lastName=' + this.randomLastNameFa() + '&nationalCode=' + this.randomNationalId() + '&mobileNumber=' + this.randomPhoneNumber()])
     this._router.navigate(['shahkar'], {
       queryParams: {
@@ -26,7 +31,7 @@ export class LinkCreatorComponent {
         firstName: this.randomFirstName(),
         lastName: this.randomLastNameFa(),
         nationalCode: this.randomNationalId(),
-        mobileNumber: this.randomPhoneNumber()
+        mobileNumber: this.randomPhoneNumber(),
       }
     })
   }
@@ -41,18 +46,15 @@ export class LinkCreatorComponent {
   }
 
   randomPhoneNumber() {
-    // پیش‌شماره‌های واقعی اپراتورهای ایرانسل، همراه‌اول، رایتل و شاتل
     const prefixes = [
-      '0901', '0902', '0903', '0905', // رایتل
-      '0910', '0911', '0912', '0913', '0914', '0915', '0916', '0917', '0918', '0919', // همراه‌اول
-      '0920', '0921', '0922', // شاتل موبایل
-      '0930', '0933', '0935', '0936', '0937', '0938', '0939' // ایرانسل
+      '0901', '0902', '0903', '0905',
+      '0910', '0911', '0912', '0913', '0914', '0915', '0916', '0917', '0918', '0919',
+      '0920', '0921', '0922',
+      '0930', '0933', '0935', '0936', '0937', '0938', '0939'
     ];
 
     const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
     let number = prefix;
-
-    // 7 رقم بعدی به‌صورت رندوم
     for (let i = 0; i < 7; i++) {
       number += Math.floor(Math.random() * 10);
     }

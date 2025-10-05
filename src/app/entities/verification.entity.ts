@@ -3,7 +3,7 @@ export interface UserQuery {
   firstName: string,
   lastName: string,
   nationalCode: string,
-  mobileNumber: string
+  mobileNumber: string,
 }
 
 export interface UserQueryResponse {
