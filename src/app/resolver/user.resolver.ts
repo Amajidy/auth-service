@@ -5,18 +5,16 @@ import {UserQuery, UserQueryResponse} from "../entities/verification.entity";
 
 export const userResolver: ResolveFn<UserQueryResponse | null> = (route, state) => {
   const _verificationService = inject(VerificationService);
-  const user: UserQuery = route.queryParams as UserQuery
+  const user: UserQuery = route.queryParams as UserQuery;
   let temp = _verificationService.getState();
-  async function request() {
-    console.log(user)
-    // if (user) {
-      const response = await _verificationService.startAction(user.trackingCode ? user : temp as UserQuery)
-      console.log(response)
-      _verificationService.saveState(response);
-      console.log(_verificationService.getState());
-      temp = response;
-    // }
+  if (user?.trackingCode) {
+    request(user as UserQueryResponse);
+  } else {
+    request(temp as UserQueryResponse);
   }
-  request();
-  return temp
+  async function request(value: UserQueryResponse) {
+      const response = await _verificationService.startAction(value)
+      _verificationService.saveState(response);
+  }
+  return _verificationService.getState()!
 };
