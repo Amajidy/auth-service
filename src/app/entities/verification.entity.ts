@@ -20,5 +20,6 @@ export interface UserQueryResponse {
 export enum Step {
   SHAHKAR= "SHAHKAR",
   VIDEO = "VIDEO",
-  SIGN = "SIGN"
+  SIGN = "SIGN",
+
 }

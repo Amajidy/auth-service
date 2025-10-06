@@ -45,5 +45,34 @@ export class VerificationService {
     })
   }
 
+  async videoAction(video: string) {
+    return await firstValueFrom(this._http.post(baseUrl + 'verification/step/video', {
+      videoData: video,
+      trackingCode: this.getState()?.trackingCode
+    }));
+  }
 
+  sendVideo(video: string) {
+    this.videoAction(video).then((response:any) => {
+      if (response.isPassed){
+        this._router.navigate(['sign'])
+      }
+    });
+  }
+
+
+  async signAction(value: string) {
+    return await firstValueFrom(this._http.post(baseUrl + 'verification/step/sign', {
+      signData: value,
+      trackingCode: this.getState()?.trackingCode
+    }));
+  }
+
+  sendSignature(value: string) {
+    this.signAction(value).then((response:any) => {
+      if (response.isPassed){
+        this._router.navigate(['completed'])
+      }
+    })
+  }
 }

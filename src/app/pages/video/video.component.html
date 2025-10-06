@@ -70,7 +70,10 @@
           </div>
         </div>
 
-        <div class="flex justify-center">
+        <div class="flex justify-center gap-4">
+          @if (recordedChunks.length && !recording) {
+            <app-button class="w-full rounded-lg text-white font-semibold focus:outline-none" (click)="sendVideo()">ارسال</app-button>
+          }
           <app-button
             class="w-full rounded-lg text-white font-semibold focus:outline-none"
             [class.bg-red-600]="recording"

@@ -27,9 +27,13 @@ export class MainLayoutComponent implements OnInit {
         case Step.VIDEO:
           return 2;
           case Step.SIGN:
-            return 3;
+            if (this.user()?.isCompleted){
+              return 4
+            } else {
+              return 3;
+            }
       default:
-        return 1;
+        return 4;
     }
   })
   ngOnInit() {
@@ -49,7 +53,7 @@ export class MainLayoutComponent implements OnInit {
           break;
       }
     } else {
-      console.log('your authorization has been completed.');
+      this._router.navigate(['completed']);
     }
   }
 }

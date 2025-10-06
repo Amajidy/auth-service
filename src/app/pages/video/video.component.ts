@@ -4,11 +4,12 @@ import {
   OnDestroy,
   OnInit,
   ViewChild,
-  ChangeDetectorRef, signal, NgZone
+  ChangeDetectorRef, signal, NgZone, inject
 } from '@angular/core';
 import * as faceapi from 'face-api.js';
 import {NgIf} from "@angular/common";
 import {ButtonComponent} from "../../../components/button/button.component";
+import {VerificationService} from "../../services/verification.service";
 
 @Component({
   selector: 'app-video',
@@ -21,6 +22,7 @@ import {ButtonComponent} from "../../../components/button/button.component";
   styleUrl: './video.component.scss'
 })
 export class VideoComponent implements OnInit, OnDestroy {
+  private _verificationService = inject(VerificationService)
   @ViewChild('videoEl', { static: true }) videoRef!: ElementRef<HTMLVideoElement>;
   modelsLoaded = false;
   recording = false;
@@ -33,7 +35,7 @@ export class VideoComponent implements OnInit, OnDestroy {
   doesUserAccessCamera = false;
 
   private mediaRecorder: MediaRecorder | null = null;
-  private recordedChunks: Blob[] = [];
+  recordedChunks: Blob[] = [];
   // private detectionIntervalId: any = null; // حذف شد
   private animationFrameId: number | null = null; // برای تشخیص چهره در حالت Live View
 
@@ -346,5 +348,21 @@ export class VideoComponent implements OnInit, OnDestroy {
     if (!video || !video.duration) return;
     const newTime = (clickX / rect.width) * video.duration;
     video.currentTime = newTime;
+  }
+
+  sendVideo() {
+    this.blobToBase64(this.recordedChunks).then(base64 => {
+      console.log(base64);
+      this._verificationService.sendVideo(base64 as string)
+    });
+  }
+
+  blobToBase64(blob: Blob[]) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result); // reader.result contains the base64 string
+      reader.onerror = reject;
+      reader.readAsDataURL(blob[0]);
+    });
   }
 }

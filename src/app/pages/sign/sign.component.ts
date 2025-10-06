@@ -1,5 +1,6 @@
-import {AfterViewInit, Component, ElementRef, signal, ViewChild, HostListener} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, signal, ViewChild, HostListener, inject} from '@angular/core';
 import {ButtonComponent} from "../../../components/button/button.component";
+import {VerificationService} from "../../services/verification.service";
 
 @Component({
   selector: 'app-sign',
@@ -9,6 +10,7 @@ import {ButtonComponent} from "../../../components/button/button.component";
   styleUrl: './sign.component.scss'
 })
 export class SignComponent implements AfterViewInit {
+  private _verificationService = inject(VerificationService);
   @ViewChild('canvas', { static: true }) canvasRef!: ElementRef<HTMLCanvasElement>;
 
   private ctx!: CanvasRenderingContext2D;
@@ -100,9 +102,7 @@ export class SignComponent implements AfterViewInit {
 
   saveSignature() {
     const dataUrl = this.canvasRef.nativeElement.toDataURL('image/png');
-    console.log('Signature Base64:', dataUrl);
-    // هشدار (alert) طبق دستورالعمل‌ها حذف و با پیام Console جایگزین شد.
-    console.log('✅ امضا با موفقیت ذخیره شد (مشاهده در Console مرورگر).');
+    this._verificationService.sendSignature(dataUrl);
   }
 
   private getCoordinates(event: MouseEvent | TouchEvent): { x: number; y: number } {
